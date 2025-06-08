@@ -1,0 +1,170 @@
+!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>سایه‌نگاری شخصیتی</title>
+  <style>
+    body {
+      direction: rtl;
+      font-family: sans-serif;
+      background-color: #111;
+      color: #f1f1f1;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #ffcc00;
+    }
+    .question {
+      margin: 2rem 0;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 0.5rem;
+      background-color: #222;
+      color: #f1f1f1;
+      border: 1px solid #555;
+      margin-top: 0.5rem;
+    }
+    button {
+      display: block;
+      margin: 2rem auto;
+      padding: 1rem 2rem;
+      background-color: #444;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    #adminBtn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      width: 20px;
+      height: 20px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      opacity: 0;
+    }
+    #adminPanel {
+      display: none;
+      background: #222;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>آزمون سایه‌نگاری شخصیتی</h1>
+  <div id="form"></div>
+  <div id="result"></div>
+  <button id="adminBtn"></button>
+
+  <script>
+    const questions = [
+      "اسمت چیه؟",
+      "بیشتر وقتا چطور با احساساتت کنار میای؟",
+      "تو تنهایی حالت چطوره؟",
+      "بزرگ‌ترین ترست چیه؟",
+      "وقتی ناراحتی معمولاً چی کار می‌کنی؟",
+      "دوست داری بقیه تو رو چطور ببینن؟",
+      "یه خاطره‌ای که یادت نمی‌ره رو تعریف کن.",
+      "بزرگ‌ترین رویات چیه؟",
+      "چی باعث میشه احساس زنده بودن کنی؟"
+    ];
+
+    let answers = [];
+    let step = 0;
+
+    const form = document.getElementById("form");
+    const resultDiv = document.getElementById("result");
+
+    function showQuestion() {
+      form.innerHTML = `
+        <div class="question">
+          <label>${questions[step]}</label>
+          <textarea id="answer" rows="3"></textarea>
+        </div>
+        <button onclick="next()">بعدی</button>
+      `;
+    }
+
+    function next() {
+      const val = document.getElementById("answer").value.trim();
+      if (!val) return;
+      answers.push(val);
+      step++;
+      if (step < questions.length) {
+        showQuestion();
+      } else {
+        analyze();
+      }
+    }
+
+    function analyze() {
+      const name = answers[0];
+      const textAnswers = answers.slice(1).join(" ").toLowerCase();
+
+      let traits = [];
+
+      if (textAnswers.includes("تنهایی")) traits.push("درون‌گرا");
+      if (textAnswers.includes("گریه") || textAnswers.includes("اشک")) traits.push("احساساتی");
+      if (textAnswers.includes("کنترل") || textAnswers.includes("مدیریت")) traits.push("منطقی");
+      if (textAnswers.includes("رویا") || textAnswers.includes("هدف")) traits.push("آینده‌نگر");
+      if (textAnswers.includes("دوست")) traits.push("اجتماعی");
+      if (textAnswers.includes("مرگ") || textAnswers.includes("تاریکی")) traits.push("عمیق و درگیر با سایه‌ها");
+      if (textAnswers.includes("مبارزه") || textAnswers.includes("تلاش")) traits.push("مقاوم و جنگنده");
+
+      const finalTraits = traits.length ? traits.join("، ") : "شخصیت پیچیده و منحصر به‌فرد";
+
+      const output = `
+        <h2>نتیجه تحلیل برای ${name}:</h2>
+        <p><strong>تحلیل شخصیت:</strong> ${finalTraits}</p>
+      `;
+      resultDiv.innerHTML = output;
+
+      saveResult(name, answers.slice(1), finalTraits);
+    }
+
+    function saveResult(name, responses, analysis) {
+      const old = JSON.parse(localStorage.getItem("results") || "[]");
+      old.push({ name, responses, analysis });
+      localStorage.setItem("results", JSON.stringify(old));
+    }
+
+    // بخش مدیریت
+    const adminBtn = document.getElementById("adminBtn");
+
+    adminBtn.addEventListener("click", () => {
+      const pass = prompt("رمز مدیریت رو وارد کن:");
+      if (pass === "F13239113") {
+        showAdminPanel();
+      } else {
+        alert("رمز اشتباهه!");
+      }
+    });
+
+    function showAdminPanel() {
+      const all = JSON.parse(localStorage.getItem("results") || "[]");
+      let html = `<h2>مدیریت پاسخ‌ها</h2>`;
+      if (all.length === 0) html += "<p>هیچ داده‌ای ثبت نشده.</p>";
+      else {
+        all.forEach((item, index) => {
+          html += `
+            <div style="border:1px solid #444; padding:1rem; margin:1rem 0;">
+              <strong>${index + 1}. ${item.name}</strong><br/>
+              <em>تحلیل:</em> ${item.analysis}<br/>
+              <details><summary>پاسخ‌ها</summary>${item.responses.map((r, i) => `<p><strong>سوال ${i + 1}:</strong> ${r}</p>`).join("")}</details>
+            </div>
+          `;
+        });
+      }
+      resultDiv.innerHTML = html;
+    }
+
+    // شروع
+    showQuestion();
+  </script>
+</body>
+</html>
